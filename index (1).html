@@ -1,0 +1,1453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WristMatch – Your AI Watch Concierge</title>
+<meta name="description" content="WristMatch is an AI watch concierge that helps you find a watch that suits your style, budget and lifestyle.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%232E4D41'/%3E%3Cpath d='M16 16V7M16 16l6 3' stroke='%23F3EFE4' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400..700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ivory: #F3EFE4;
+    --paper: #FBF9F3;
+    --charcoal: #23262A;
+    --ink-soft: #5E6064;
+    --green: #2E4D41;
+    --green-tint: #E1E8E2;
+    --champagne: #BFA878;
+    --line: #D9D2C2;
+    --danger: #8A2E25;
+    --danger-tint: #F6E5E1;
+    --display: "Bodoni Moda", "Bodoni 72", Didot, Georgia, serif;
+    --body: "Jost", "Futura", "Avenir Next", system-ui, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ivory);
+    color: var(--charcoal);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.55;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* Header */
+  .masthead {
+    display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+    padding: calc(1.1rem + env(safe-area-inset-top, 0px)) clamp(1rem, 4vw, 3rem) 1.1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .wordmark {
+    font-family: var(--display); font-size: 1.75rem; font-weight: 600;
+    letter-spacing: -0.01em; color: var(--charcoal); text-decoration: none;
+  }
+  .tagline { color: var(--ink-soft); font-size: .95rem; }
+  .masthead .btn-ghost { margin-left: auto; }
+  .btn-ghost {
+    background: transparent; border: 1px solid var(--charcoal); border-radius: 999px;
+    padding: .45rem 1rem; cursor: pointer; font-size: .92rem;
+    transition: background-color .2s, color .2s;
+  }
+  .btn-ghost:hover:not(:disabled) { background: var(--charcoal); color: var(--paper); }
+  .btn-ghost:disabled { opacity: .5; cursor: default; }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-areas: "intro panel" "chat panel";
+    grid-template-rows: auto 1fr;
+    gap: 1.5rem 2.5rem;
+    max-width: 1240px; margin: 0 auto;
+    padding: 2rem clamp(1rem, 4vw, 3rem) 2rem;
+    align-items: start;
+  }
+  .intro {
+    grid-area: intro; display: grid; grid-template-columns: minmax(0, 1fr) 180px;
+    gap: 1.25rem 2.5rem; align-items: center;
+  }
+  .intro-text { max-width: 44rem; }
+
+  /* Live watch illustration */
+  .watch-fig { margin: 0; display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+  .watch-btn { background: none; border: 0; padding: 0; cursor: pointer; border-radius: 50%; }
+  .watch-btn svg { width: 178px; height: auto; display: block; filter: drop-shadow(0 10px 16px rgba(35, 38, 42, .2)); transition: transform .35s ease; }
+  .watch-btn:hover svg { transform: rotate(-5deg); }
+  .watch-cap { font-size: .82rem; color: var(--ink-soft); text-align: center; line-height: 1.35; max-width: 13rem; }
+  .watch-cap strong { display: block; font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--charcoal); }
+  #watch { transition: opacity .18s ease; }
+  .intro h1 {
+    font-family: var(--display); font-weight: 500;
+    font-size: clamp(2rem, 4.2vw, 3.3rem); line-height: 1.08;
+    letter-spacing: -0.015em; margin: 0 0 .8rem;
+  }
+  .intro p { margin: 0; color: var(--ink-soft); max-width: 38rem; }
+
+  /* Chat */
+  .chat {
+    grid-area: chat; display: flex; flex-direction: column;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 22px;
+    height: min(760px, 78vh); min-height: 460px; overflow: hidden;
+  }
+  .log {
+    flex: 1; overflow-y: auto; padding: 1.4rem clamp(1rem, 3vw, 1.75rem);
+    display: flex; flex-direction: column; gap: 1rem; scroll-behavior: smooth;
+  }
+  .msg { max-width: min(38rem, 90%); padding: .8rem 1.05rem; border-radius: 18px; overflow-wrap: anywhere; }
+  .msg.user {
+    align-self: flex-end; background: var(--charcoal); color: var(--paper);
+    border-bottom-right-radius: 5px; white-space: pre-wrap;
+  }
+  .msg.bot { align-self: flex-start; background: var(--ivory); border-bottom-left-radius: 5px; }
+  .msg p { margin: 0 0 .6em; }
+  .msg p:last-child { margin-bottom: 0; }
+  .msg ul, .msg ol { margin: .2em 0 .7em; padding-left: 1.2em; }
+  .msg li { margin: .15em 0; }
+  .msg h4 {
+    font-family: var(--display); font-weight: 600; font-size: 1.15rem;
+    line-height: 1.25; margin: 1em 0 .3em;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .6rem;
+  }
+  .msg h4:first-child { margin-top: 0; }
+  .save-btn {
+    font-family: var(--body); font-weight: 500; font-size: .78rem;
+    border: 1px solid var(--green); color: var(--green); background: transparent;
+    border-radius: 999px; padding: .1rem .65rem; cursor: pointer; white-space: nowrap;
+  }
+  .save-btn[aria-pressed="true"] { background: var(--green); color: var(--paper); }
+  .meta { display: block; margin-top: .55rem; font-size: .78rem; color: var(--ink-soft); }
+  .msg.error {
+    align-self: flex-start; background: var(--danger-tint); color: var(--danger);
+    border: 1px solid #E7C3BB;
+  }
+  .msg.error button {
+    margin-top: .5rem; background: transparent; border: 1px solid var(--danger);
+    color: var(--danger); border-radius: 999px; padding: .3rem .85rem; cursor: pointer;
+  }
+  .typing { display: inline-flex; gap: .3rem; align-items: center; margin-right: .5rem; }
+  .typing span {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+    animation: tick 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: .2s; }
+  .typing span:nth-child(3) { animation-delay: .4s; }
+  .typing-label { color: var(--ink-soft); font-size: .92rem; }
+  @keyframes tick { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+  .suggestions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+  .chip {
+    border: 1px solid var(--green); color: var(--green); background: transparent;
+    border-radius: 999px; padding: .45rem .95rem; cursor: pointer; font-size: .93rem;
+    text-align: left; transition: background-color .2s, color .2s;
+  }
+  .chip:hover:not(:disabled) { background: var(--green); color: var(--paper); }
+  .chip.solid { background: var(--green); color: var(--paper); }
+  .chip.solid:hover:not(:disabled) { background: var(--charcoal); border-color: var(--charcoal); }
+  .chip:disabled { opacity: .5; cursor: default; }
+
+  .composer {
+    display: flex; gap: .6rem; align-items: flex-end; padding: .8rem;
+    border-top: 1px solid var(--line); background: var(--paper);
+  }
+  .composer textarea {
+    flex: 1; resize: none; border: 1px solid var(--line); border-radius: 14px;
+    padding: .7rem .9rem; background: #fff; min-height: 48px; max-height: 160px;
+    line-height: 1.4; font-size: 16px;
+  }
+  .composer textarea:focus { border-color: var(--green); outline: none; box-shadow: 0 0 0 2px var(--green-tint); }
+  .btn-primary {
+    background: var(--green); color: var(--paper); border: 0; border-radius: 14px;
+    padding: .75rem 1.25rem; cursor: pointer; font-weight: 500; min-height: 48px;
+  }
+  .btn-primary:disabled { opacity: .5; cursor: default; }
+
+  /* Side panel */
+  .panel { grid-area: panel; display: flex; flex-direction: column; gap: 1.6rem; }
+  .panel h2 { font-family: var(--display); font-weight: 500; font-size: 1.4rem; margin: 0 0 .5rem; line-height: 1.2; }
+  .note { font-size: .88rem; color: var(--ink-soft); margin: .7rem 0 0; }
+  .panel-section { padding-top: 1.4rem; border-top: 1px solid var(--line); }
+
+  .temp { background: var(--paper); border: 1px solid var(--line); border-radius: 22px; padding: 1.2rem 1.25rem 1.15rem; }
+  .dial { width: 100%; max-width: 270px; display: block; margin: .2rem auto 0; overflow: visible; }
+  .dial-arc { fill: none; stroke: var(--line); stroke-width: 1; }
+  .dial-tick { stroke: var(--charcoal); stroke-width: 1; }
+  .dial-tick.major { stroke-width: 2; }
+  .dial-num { font-family: var(--display); font-size: 11px; fill: var(--ink-soft); }
+  .needle { transform-box: view-box; transform-origin: 100px 100px; transition: transform .7s cubic-bezier(.3, 1.35, .5, 1); }
+  .needle line { stroke: var(--green); stroke-width: 2.4; stroke-linecap: round; }
+  .hub { fill: var(--charcoal); }
+  .hub-dot { fill: var(--champagne); }
+  .temp-value { font-family: var(--display); font-size: 2.5rem; text-align: center; line-height: 1; margin: .1rem 0 .6rem; }
+  .temp input[type=range] { width: 100%; accent-color: var(--green); margin: 0; }
+  .ends { display: flex; justify-content: space-between; font-size: .85rem; color: var(--ink-soft); margin-top: .2rem; }
+
+  .prefs dl { display: grid; grid-template-columns: auto 1fr; gap: .35rem 1rem; margin: 0; }
+  .prefs dt { color: var(--ink-soft); font-size: .88rem; }
+  .prefs dd { margin: 0; font-size: .95rem; border-radius: 4px; }
+  .prefs dd.unknown { color: #A39D90; }
+  .prefs dd.flash { animation: flash 1.6s ease-out; }
+  @keyframes flash { from { background: #EADFC3; } to { background: transparent; } }
+  .prefs .btn-ghost { margin-top: .9rem; }
+  .model { font-size: .85rem; color: var(--ink-soft); margin-top: .8rem; }
+
+  .shortlist ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+  .shortlist li {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem;
+    padding: .65rem .8rem; background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+  }
+  .sl-name { font-family: var(--display); font-weight: 600; font-size: 1.02rem; line-height: 1.25; display: block; }
+  .sl-est { font-size: .85rem; color: var(--ink-soft); display: block; margin-top: .15rem; }
+  .sl-remove {
+    background: none; border: 0; color: var(--ink-soft); font-size: .82rem; cursor: pointer;
+    text-decoration: underline; padding: 0; flex-shrink: 0;
+  }
+  .shortlist .btn-primary { width: 100%; margin-top: .8rem; }
+
+  .cmp-row { display: flex; gap: .75rem; margin: .7rem 0; }
+  .cmp-row label { flex: 1; font-size: .88rem; color: var(--ink-soft); display: flex; flex-direction: column; gap: .25rem; }
+  .cmp-row select, .compare textarea {
+    border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: .5rem .6rem; font-size: 16px;
+  }
+  .compare textarea { width: 100%; resize: vertical; min-height: 70px; }
+  .compare .suggestions { margin: .5rem 0 0; }
+  .compare .chip { font-size: .82rem; padding: .3rem .75rem; }
+  .compare .btn-primary { width: 100%; margin-top: .7rem; }
+  .hint { color: var(--danger); font-size: .88rem; min-height: 1.2em; margin: .4rem 0 0; }
+
+  footer { max-width: 1240px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 3rem) 2.5rem; font-size: .85rem; color: var(--ink-soft); }
+
+  /* Dialogs */
+  dialog {
+    border: 0; border-radius: 22px; padding: 0; width: min(1000px, 94vw); max-height: 90vh;
+    background: var(--paper); color: var(--charcoal);
+  }
+  dialog::backdrop { background: rgba(35, 38, 42, .5); }
+  .dlg-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: 1.3rem 1.5rem 1rem; border-bottom: 1px solid var(--line); }
+  .dlg-head h2 { font-family: var(--display); font-weight: 500; font-size: 1.5rem; margin: 0 0 .3rem; line-height: 1.2; }
+  .dlg-head p { margin: 0; color: var(--ink-soft); font-size: .92rem; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; }
+  .cmp-col { padding: 1.2rem 1.5rem 1.5rem; min-width: 0; }
+  .cmp-col + .cmp-col { border-left: 1px solid var(--line); }
+  .cmp-col h3 { font-family: var(--display); font-weight: 600; font-size: 1.25rem; margin: 0 0 .5rem; }
+  .stats { margin: 0 0 .8rem; padding: .6rem .8rem; background: var(--green-tint); border-radius: 10px; font-size: .9rem; }
+  .stats strong { font-family: var(--display); font-size: 1.15rem; }
+  .runs { display: flex; gap: .4rem; margin-bottom: .8rem; }
+  .run-tab {
+    border: 1px solid var(--line); background: transparent; border-radius: 999px;
+    padding: .25rem .8rem; cursor: pointer; font-size: .85rem;
+  }
+  .run-tab[aria-pressed="true"] { background: var(--charcoal); border-color: var(--charcoal); color: var(--paper); }
+  .cmp-col .msg { max-width: none; padding: 0; background: none; }
+  .dlg-foot { padding: 0 1.5rem 1.3rem; font-size: .86rem; color: var(--ink-soft); }
+  .dlg-foot p { margin: 0 0 .4rem; }
+
+  #quizDialog { width: min(620px, 94vw); }
+  .quiz-body { padding: 1.4rem 1.5rem 1.6rem; }
+  .quiz-progress { height: 3px; background: var(--line); border-radius: 3px; margin-bottom: 1.2rem; overflow: hidden; }
+  .quiz-progress span { display: block; height: 100%; background: var(--green); transition: width .35s ease; }
+  .quiz-step { font-size: .88rem; color: var(--ink-soft); margin: 0 0 .3rem; }
+  .quiz-q { font-family: var(--display); font-weight: 500; font-size: clamp(1.45rem, 3.5vw, 1.9rem); line-height: 1.2; margin: 0 0 1.1rem; }
+  .quiz-opts { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+  .quiz-opt {
+    text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 14px;
+    padding: .85rem 1rem; cursor: pointer; line-height: 1.35; transition: border-color .2s, background-color .2s;
+  }
+  .quiz-opt:hover { border-color: var(--green); }
+  .quiz-opt[aria-pressed="true"] { border-color: var(--green); background: var(--green-tint); }
+  .quiz-opt small { display: block; color: var(--ink-soft); font-size: .84rem; margin-top: .15rem; }
+  .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 1.2rem; }
+  .quiz-back { background: none; border: 0; color: var(--ink-soft); text-decoration: underline; cursor: pointer; padding: 0; }
+  .quiz-result-title { font-family: var(--display); font-weight: 600; font-size: clamp(1.8rem, 5vw, 2.4rem); line-height: 1.1; margin: .2rem 0 .6rem; color: var(--green); }
+  .quiz-summary { display: grid; grid-template-columns: auto 1fr; gap: .3rem 1rem; margin: 1rem 0 1.3rem; font-size: .95rem; }
+  .quiz-summary dt { color: var(--ink-soft); }
+  .quiz-summary dd { margin: 0; }
+  .quiz-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "intro" "chat" "panel"; grid-template-rows: auto; padding-top: 1.4rem; }
+    .chat { height: 76vh; height: 76svh; min-height: 420px; border-radius: 18px; }
+    .intro { grid-template-columns: minmax(0, 1fr) 130px; }
+    .watch-btn svg { width: 120px; }
+  }
+  @media (max-width: 600px) {
+    .intro { grid-template-columns: 1fr; }
+    .watch-fig { flex-direction: row; justify-content: flex-start; gap: 1rem; }
+    .watch-btn svg { width: 86px; }
+    .watch-cap { text-align: left; }
+  }
+  @media (max-width: 700px) {
+    .cols { grid-template-columns: 1fr; }
+    .cmp-col + .cmp-col { border-left: 0; border-top: 1px solid var(--line); }
+    .quiz-opts { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    .tagline { display: none; }
+    .composer .btn-primary { padding: .75rem 1rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <a class="wordmark" href="/">WristMatch</a>
+  <span class="tagline">Your AI watch concierge</span>
+  <button id="newChat" class="btn-ghost" type="button">New conversation</button>
+</header>
+
+<main class="layout">
+  <section class="intro">
+    <div class="intro-text">
+      <h1>Find the watch that fits your wrist, your days and your budget.</h1>
+      <p>Take the one-minute style quiz or just start chatting. WristMatch asks a few questions, then suggests three real watches with honest trade-offs. Save the ones you like to your shortlist.</p>
+    </div>
+    <figure class="watch-fig">
+      <button id="watchBtn" class="watch-btn" type="button" aria-label="Show another dial style">
+        <svg id="watch" viewBox="0 0 200 280" role="img" aria-labelledby="watchLabel"></svg>
+      </button>
+      <figcaption id="watchCap" class="watch-cap"></figcaption>
+    </figure>
+  </section>
+
+  <section class="chat" aria-label="Chat with WristMatch">
+    <div id="log" class="log" role="log" aria-live="polite"></div>
+    <form id="composer" class="composer">
+      <label for="input" class="visually-hidden">Your message</label>
+      <textarea id="input" rows="1" maxlength="1000" placeholder="Ask about a watch, or tell me your budget…"></textarea>
+      <button id="send" class="btn-primary" type="submit">Send</button>
+    </form>
+  </section>
+
+  <aside class="panel">
+    <section class="temp" aria-labelledby="tempTitle">
+      <h2 id="tempTitle">Temperature</h2>
+      <svg class="dial" viewBox="0 0 200 116" aria-hidden="true">
+        <path class="dial-arc" d="M20 100 A80 80 0 0 1 180 100"></path>
+        <g id="ticks"></g>
+        <g id="needle" class="needle">
+          <line x1="100" y1="100" x2="100" y2="30"></line>
+          <line x1="100" y1="100" x2="100" y2="112"></line>
+        </g>
+        <circle class="hub" cx="100" cy="100" r="5"></circle>
+        <circle class="hub-dot" cx="100" cy="100" r="1.8"></circle>
+      </svg>
+      <div id="tempValue" class="temp-value" aria-hidden="true">0.7</div>
+      <input id="temp" type="range" min="0" max="1.5" step="0.1" value="0.7" aria-labelledby="tempTitle" aria-describedby="tempNote">
+      <div class="ends"><span>More focused</span><span>More exploratory</span></div>
+      <p id="tempNote" class="note">This value is sent to the AI with every chat message. Lower values make answers more predictable; higher values allow more varied wording and choices. Temperature doesn’t make answers more accurate, and WristMatch is told to stick to real watches and honest estimates at every setting. The range stops at 1.5 because above that, answers often stop making sense.</p>
+    </section>
+
+    <section class="prefs panel-section" aria-labelledby="prefsTitle">
+      <h2 id="prefsTitle">What WristMatch knows so far</h2>
+      <dl id="prefs"></dl>
+      <button id="quizOpen2" class="btn-ghost" type="button">Take the style quiz</button>
+      <p class="model">Model: <span id="modelName">shown after the first reply</span></p>
+    </section>
+
+    <section class="shortlist panel-section" aria-labelledby="slTitle">
+      <h2 id="slTitle">Your shortlist</h2>
+      <div id="shortlist"></div>
+    </section>
+
+    <section class="compare panel-section" aria-labelledby="cmpTitle">
+      <h2 id="cmpTitle">Compare temperatures</h2>
+      <p class="note" style="margin-top:0">Ask one question three times at each of two temperatures, with the same model, instructions and conversation. Only the temperature changes. Open-ended questions show the effect most clearly.</p>
+      <div class="cmp-row">
+        <label>First temperature<select id="cmpA"></select></label>
+        <label>Second temperature<select id="cmpB"></select></label>
+      </div>
+      <label for="cmpQ" class="note" style="display:block;margin:0 0 .3rem">Question</label>
+      <textarea id="cmpQ" maxlength="1000" placeholder="For example: Suggest a daily watch under €1,000"></textarea>
+      <div id="cmpIdeas" class="suggestions"></div>
+      <button id="cmpRun" class="btn-primary" type="button">Compare temperatures</button>
+      <p id="cmpHint" class="hint" role="status"></p>
+    </section>
+  </aside>
+</main>
+
+<footer>
+  <p>WristMatch is a university project. Its suggestions are generated by AI, and prices are rough estimates that may be out of date. Confirm details with an authorised retailer before buying.</p>
+</footer>
+
+<dialog id="cmpDialog" aria-labelledby="cmpDlgTitle">
+  <div class="dlg-head">
+    <div>
+      <h2 id="cmpDlgTitle">Same question, two temperatures, three runs each</h2>
+      <p id="cmpQuestion"></p>
+    </div>
+    <button id="cmpClose" class="btn-ghost" type="button">Close</button>
+  </div>
+  <div id="cmpBody" class="cols"></div>
+  <div class="dlg-foot">
+    <p><strong>Word overlap</strong>: for each pair of runs, the number of distinct words used in both answers divided by the number used in either (Jaccard similarity), averaged over the three pairs. Higher means the runs are more alike. Watch names are counted by their exact heading text.</p>
+    <p>Model, instructions, conversation and length limit are identical; only the temperature differs. Three runs per temperature illustrate the effect but are not a precise measurement, and even at 0 the runs can differ slightly.</p>
+  </div>
+</dialog>
+
+<dialog id="quizDialog" aria-labelledby="quizTitle">
+  <div class="dlg-head">
+    <div><h2 id="quizTitle">Your watch personality</h2></div>
+    <button id="quizClose" class="btn-ghost" type="button">Close</button>
+  </div>
+  <div id="quizBody" class="quiz-body"></div>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  var TEMP_MAX = 1.5;
+  var MAX_HISTORY = 20;
+  var SHORTLIST_KEY = "wristmatch-shortlist";
+  var SHORTLIST_MAX = 8;
+  var PREF_LABELS = {
+    budget: "Budget",
+    use: "When you’ll wear it",
+    style: "Style",
+    materials: "Colours & materials",
+    wrist: "Wrist size",
+    movement: "Movement",
+    condition: "New or pre-owned"
+  };
+  var SUGGESTIONS = [
+    "Help me choose my first watch",
+    "Find a watch under €500",
+    "Explain automatic vs quartz",
+    "What suits a small wrist?"
+  ];
+  var COMPARE_IDEAS = [
+    "Describe the ideal watch for my style in two sentences",
+    "Suggest a daily watch under €1,000",
+    "Write a one-line tagline for my future watch"
+  ];
+  var QUIZ = [
+    { key: "budget", q: "What would you like to spend?", opts: [
+      ["Under €300", "Under €300"],
+      ["€300 to €1,000", "€300–1,000"],
+      ["€1,000 to €3,000", "€1,000–3,000"],
+      ["More than €3,000", "Over €3,000"] ] },
+    { key: "use", q: "When will you wear it most?", opts: [
+      ["Every day, work included", "Every day, including work"],
+      ["Mostly at the office", "Mostly at the office"],
+      ["Special occasions", "Special occasions"],
+      ["Sport and the outdoors", "Sport and outdoors"] ] },
+    { key: "style", q: "Which style feels most like you?", opts: [
+      ["Clean and minimal", "Clean and minimal"],
+      ["Classic and dressy", "Classic and dressy"],
+      ["Rugged and sporty", "Rugged and sporty"],
+      ["Bold and colourful", "Bold and colourful"] ] },
+    { key: "materials", q: "Which colours and materials do you reach for?", opts: [
+      ["Steel and silver tones", "Steel, silver tones"],
+      ["Gold and warm tones", "Gold, warm tones"],
+      ["Black and dark tones", "Black, dark tones"],
+      ["Leather and earthy colours", "Leather, earthy colours"] ] },
+    { key: "wrist", q: "How big is your wrist?", opts: [
+      ["Small", "Small (under 16 cm)", "Under 16 cm around"],
+      ["Medium", "Medium (16–18 cm)", "16 to 18 cm around"],
+      ["Large", "Large (over 18 cm)", "Over 18 cm around"],
+      ["I don’t know", null, "No problem, we’ll keep sizes flexible"] ] },
+    { key: "movement", q: "What should power your watch?", opts: [
+      ["Quartz", "Quartz", "Battery, very accurate, no fuss"],
+      ["Automatic", "Automatic", "Winds itself as you move"],
+      ["Hand-wound", "Hand-wound", "You wind it, a small daily ritual"],
+      ["Not sure yet", "Undecided", "WristMatch will explain"] ] },
+    { key: "condition", q: "New or pre-owned?", opts: [
+      ["New only", "New only"],
+      ["Open to pre-owned", "Open to pre-owned"],
+      ["No preference", "No preference"] ] }
+  ];
+  var PERSONALITIES = [
+    ["The Quiet Minimalist", "You like things that look effortless: slim cases, clean dials and nothing that shouts."],
+    ["The Timeless Classicist", "You value elegance that lasts: refined dials, careful details and a watch that suits a suit."],
+    ["The Adventurer", "You want a watch that can take a knock: legible, tough and ready for anything outdoors."],
+    ["The Statement Maker", "Your watch is part of your outfit: colourful dials and designs that people notice."]
+  ];
+
+  function $(id) { return document.getElementById(id); }
+  var log = $("log"), input = $("input"), sendBtn = $("send"), composer = $("composer");
+  var tempRange = $("temp"), tempValue = $("tempValue"), needle = $("needle");
+  var prefList = $("prefs"), modelName = $("modelName"), newChat = $("newChat");
+  var slBox = $("shortlist");
+  var cmpA = $("cmpA"), cmpB = $("cmpB"), cmpQ = $("cmpQ"), cmpBtn = $("cmpRun"), cmpHint = $("cmpHint"), cmpIdeas = $("cmpIdeas");
+  var dlg = $("cmpDialog"), dlgBody = $("cmpBody"), dlgQ = $("cmpQuestion"), dlgClose = $("cmpClose");
+  var quizDlg = $("quizDialog"), quizBody = $("quizBody");
+
+  function emptyProfile() {
+    var p = {};
+    Object.keys(PREF_LABELS).forEach(function (k) { p[k] = null; });
+    return p;
+  }
+  var state = { messages: [], profile: emptyProfile(), temperature: 0.7, busy: false, conv: 0 };
+  var quiz = { step: 0, answers: {} };
+
+  /* ---------- Safe, minimal formatting of AI replies ---------- */
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function inline(s) {
+    return s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+            .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  }
+  function renderMarkdown(text) {
+    var lines = escapeHtml(text).split("\n");
+    var html = "", list = null, m;
+    function close() { if (list) { html += "</" + list + ">"; list = null; } }
+    lines.forEach(function (raw) {
+      var line = raw.replace(/\s+$/, "");
+      if ((m = line.match(/^#{1,4}\s+(.*)/))) { close(); html += "<h4>" + inline(m[1]) + "</h4>"; }
+      else if ((m = line.match(/^\s*[-*•]\s+(.*)/))) {
+        if (list !== "ul") { close(); html += "<ul>"; list = "ul"; }
+        html += "<li>" + inline(m[1]) + "</li>";
+      }
+      else if ((m = line.match(/^\s*\d+[.)]\s+(.*)/))) {
+        if (list !== "ol") { close(); html += "<ol>"; list = "ol"; }
+        html += "<li>" + inline(m[1]) + "</li>";
+      }
+      else if (line.trim() === "") { close(); }
+      else { close(); html += "<p>" + inline(line) + "</p>"; }
+    });
+    close();
+    return html;
+  }
+
+  /* ---------- Chat rendering ---------- */
+  function scrollToEnd() { log.scrollTop = log.scrollHeight; }
+
+  function addUser(text) {
+    var el = document.createElement("div");
+    el.className = "msg user";
+    el.textContent = text;
+    log.appendChild(el);
+    scrollToEnd();
+  }
+  function addBot(text, temperature) {
+    var el = document.createElement("div");
+    el.className = "msg bot";
+    el.innerHTML = renderMarkdown(text);
+    attachSaveButtons(el);
+    if (typeof temperature === "number") {
+      var meta = document.createElement("span");
+      meta.className = "meta";
+      meta.textContent = "Temperature " + temperature.toFixed(1);
+      el.appendChild(meta);
+    }
+    log.appendChild(el);
+    scrollToEnd();
+  }
+  function typingEl(label) {
+    var el = document.createElement("div");
+    el.className = "msg bot";
+    el.innerHTML = '<span class="typing" aria-hidden="true"><span></span><span></span><span></span></span><span class="typing-label"></span>';
+    el.querySelector(".typing-label").textContent = label || "WristMatch is thinking…";
+    return el;
+  }
+  function addError(message, canRetry) {
+    var el = document.createElement("div");
+    el.className = "msg error";
+    el.setAttribute("role", "alert");
+    var p = document.createElement("p");
+    p.textContent = message;
+    el.appendChild(p);
+    if (canRetry) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = "Try again";
+      b.addEventListener("click", function () {
+        if (state.busy) return;
+        el.remove();
+        requestReply();
+      });
+      el.appendChild(b);
+    }
+    log.appendChild(el);
+    scrollToEnd();
+  }
+  function renderWelcome() {
+    log.innerHTML = "";
+    var el = document.createElement("div");
+    el.className = "msg bot";
+    el.innerHTML = "<p>Hello, I’m WristMatch. Tell me a little about how you’d wear a watch and what you’d like to spend, take the quick style quiz, or pick a starting point below.</p>";
+    var box = document.createElement("div");
+    box.className = "suggestions";
+    var q = document.createElement("button");
+    q.type = "button";
+    q.className = "chip solid";
+    q.textContent = "Take the 1-minute style quiz";
+    q.addEventListener("click", openQuiz);
+    box.appendChild(q);
+    SUGGESTIONS.forEach(function (s) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip";
+      b.textContent = s;
+      b.addEventListener("click", function () { send(s); });
+      box.appendChild(b);
+    });
+    el.appendChild(box);
+    log.appendChild(el);
+  }
+
+  /* ---------- Preference summary ---------- */
+  function renderPrefs(changed) {
+    changed = changed || {};
+    prefList.innerHTML = "";
+    Object.keys(PREF_LABELS).forEach(function (k) {
+      var dt = document.createElement("dt");
+      dt.textContent = PREF_LABELS[k];
+      var dd = document.createElement("dd");
+      dd.textContent = state.profile[k] || "Not yet known";
+      if (!state.profile[k]) dd.className = "unknown";
+      if (changed[k]) dd.className = "flash";
+      prefList.appendChild(dt);
+      prefList.appendChild(dd);
+    });
+  }
+  function applyProfile(p) {
+    if (!p) return;
+    var changed = {};
+    Object.keys(PREF_LABELS).forEach(function (k) {
+      if (typeof p[k] === "string" && p[k] && p[k] !== state.profile[k]) {
+        state.profile[k] = p[k];
+        changed[k] = true;
+      }
+    });
+    renderPrefs(changed);
+  }
+
+  /* ---------- Shortlist ---------- */
+  function loadShortlist() {
+    try {
+      var arr = JSON.parse(localStorage.getItem(SHORTLIST_KEY) || "[]");
+      if (!Array.isArray(arr)) return [];
+      return arr.filter(function (x) { return x && typeof x.name === "string"; }).slice(0, SHORTLIST_MAX);
+    } catch (e) { return []; }
+  }
+  var shortlist = loadShortlist();
+  function storeShortlist() {
+    try { localStorage.setItem(SHORTLIST_KEY, JSON.stringify(shortlist)); } catch (e) { /* storage unavailable */ }
+  }
+  function findSaved(name) {
+    var n = name.toLowerCase();
+    for (var i = 0; i < shortlist.length; i++) if (shortlist[i].name.toLowerCase() === n) return i;
+    return -1;
+  }
+  function refreshSaveButtons() {
+    document.querySelectorAll(".save-btn").forEach(function (b) {
+      var saved = findSaved(b.dataset.name) !== -1;
+      b.setAttribute("aria-pressed", saved ? "true" : "false");
+      b.textContent = saved ? "Saved" : "Save";
+    });
+  }
+  function renderShortlist() {
+    slBox.innerHTML = "";
+    if (!shortlist.length) {
+      var p = document.createElement("p");
+      p.className = "note";
+      p.style.marginTop = "0";
+      p.textContent = "When WristMatch recommends watches, press “Save” next to a name to keep it here. Your shortlist stays in this browser.";
+      slBox.appendChild(p);
+      return;
+    }
+    var ul = document.createElement("ul");
+    shortlist.forEach(function (item, i) {
+      var li = document.createElement("li");
+      var info = document.createElement("div");
+      var name = document.createElement("span");
+      name.className = "sl-name";
+      name.textContent = item.name;
+      info.appendChild(name);
+      if (item.estimate) {
+        var est = document.createElement("span");
+        est.className = "sl-est";
+        est.textContent = "Estimate: " + item.estimate;
+        info.appendChild(est);
+      }
+      var rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "sl-remove";
+      rm.textContent = "Remove";
+      rm.setAttribute("aria-label", "Remove " + item.name + " from shortlist");
+      rm.addEventListener("click", function () {
+        shortlist.splice(i, 1);
+        storeShortlist();
+        renderShortlist();
+        refreshSaveButtons();
+      });
+      li.appendChild(info);
+      li.appendChild(rm);
+      ul.appendChild(li);
+    });
+    slBox.appendChild(ul);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-primary sl-compare";
+    btn.textContent = "Ask WristMatch to compare these";
+    btn.disabled = shortlist.length < 2 || state.busy;
+    btn.title = shortlist.length < 2 ? "Save at least two watches first" : "";
+    btn.addEventListener("click", function () {
+      var names = shortlist.map(function (x) { return x.name; }).join("; ");
+      send("Please compare the watches on my shortlist: " + names + ". Which would suit me best, and why?");
+    });
+    slBox.appendChild(btn);
+  }
+  function attachSaveButtons(el) {
+    el.querySelectorAll("h4").forEach(function (h) {
+      var name = h.textContent.replace(/^\s*\d+[.)]\s*/, "").trim();
+      if (!name) return;
+      var estimate = "";
+      var next = h.nextElementSibling;
+      if (next && next.tagName === "UL") {
+        next.querySelectorAll("li").forEach(function (li) {
+          if (!estimate && /^\s*estimate/i.test(li.textContent)) {
+            estimate = li.textContent.replace(/^\s*estimate\s*:?\s*/i, "").trim().slice(0, 80);
+          }
+        });
+      }
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "save-btn";
+      b.dataset.name = name;
+      b.addEventListener("click", function () {
+        var idx = findSaved(name);
+        if (idx !== -1) {
+          shortlist.splice(idx, 1);
+        } else {
+          if (shortlist.length >= SHORTLIST_MAX) {
+            addError("Your shortlist is full (" + SHORTLIST_MAX + " watches). Remove one to save another.", false);
+            return;
+          }
+          shortlist.push({ name: name, estimate: estimate });
+        }
+        storeShortlist();
+        renderShortlist();
+        refreshSaveButtons();
+      });
+      h.appendChild(b);
+    });
+    // set labels for the new buttons
+    el.querySelectorAll(".save-btn").forEach(function (b) {
+      var saved = findSaved(b.dataset.name) !== -1;
+      b.setAttribute("aria-pressed", saved ? "true" : "false");
+      b.textContent = saved ? "Saved" : "Save";
+    });
+  }
+
+  /* ---------- Talking to the server ---------- */
+  function setBusy(b) {
+    state.busy = b;
+    sendBtn.disabled = b;
+    cmpBtn.disabled = b;
+    document.querySelectorAll(".chip").forEach(function (c) { c.disabled = b; });
+    var slBtn = slBox.querySelector(".sl-compare");
+    if (slBtn) slBtn.disabled = b || shortlist.length < 2;
+  }
+
+  async function askServer(body) {
+    var res;
+    try {
+      res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    } catch (e) {
+      throw new Error("Couldn’t reach the server. Check your internet connection and try again.");
+    }
+    var data = null;
+    try { data = await res.json(); } catch (e) { data = null; }
+    if (!res.ok) {
+      throw new Error((data && data.error) || ("The server answered with an error (status " + res.status + "). Try again."));
+    }
+    if (!data) throw new Error("The server sent an unexpected answer. Try again.");
+    return data;
+  }
+
+  async function requestReply() {
+    var conv = state.conv;
+    setBusy(true);
+    var typing = typingEl();
+    log.appendChild(typing);
+    scrollToEnd();
+    try {
+      var data = await askServer({
+        mode: "chat",
+        messages: state.messages.slice(-MAX_HISTORY),
+        temperature: state.temperature,
+        profile: state.profile
+      });
+      if (conv !== state.conv) return;
+      if (typeof data.reply !== "string") throw new Error("The server sent an unexpected answer. Try again.");
+      typing.remove();
+      state.messages.push({ role: "assistant", content: data.reply });
+      addBot(data.reply, data.temperature);
+      applyProfile(data.profile);
+      modelName.textContent = data.model;
+    } catch (err) {
+      if (conv !== state.conv) return;
+      typing.remove();
+      addError(err.message, true);
+    } finally {
+      typing.remove();
+      if (conv === state.conv) setBusy(false);
+    }
+  }
+
+  function send(text) {
+    text = (text || "").trim();
+    if (!text || state.busy) return;
+    var sugg = log.querySelector(".suggestions");
+    if (sugg) sugg.remove();
+    state.messages.push({ role: "user", content: text });
+    addUser(text);
+    input.value = "";
+    autosize();
+    requestReply();
+  }
+
+  /* ---------- Temperature comparison ---------- */
+  function wordSet(text) {
+    var words = text.toLowerCase().match(/[\p{L}\p{N}€]+/gu) || [];
+    return new Set(words);
+  }
+  function jaccard(a, b) {
+    var inter = 0;
+    a.forEach(function (w) { if (b.has(w)) inter++; });
+    var union = a.size + b.size - inter;
+    return union ? inter / union : 1;
+  }
+  function averageOverlap(replies) {
+    var sets = replies.map(wordSet), total = 0, pairs = 0;
+    for (var i = 0; i < sets.length; i++) {
+      for (var j = i + 1; j < sets.length; j++) { total += jaccard(sets[i], sets[j]); pairs++; }
+    }
+    return pairs ? total / pairs : 1;
+  }
+  function headingNames(text) {
+    return (text.match(/^#{1,4}\s+.+$/gm) || []).map(function (h) {
+      return h.replace(/^#{1,4}\s+/, "").replace(/^\d+[.)]\s*/, "").replace(/\*/g, "").trim().toLowerCase();
+    });
+  }
+
+  function renderComparison(data) {
+    dlgBody.innerHTML = "";
+    data.results.forEach(function (r) {
+      var col = document.createElement("div");
+      col.className = "cmp-col";
+      var h = document.createElement("h3");
+      h.textContent = "Temperature " + r.temperature.toFixed(1);
+      col.appendChild(h);
+
+      var stats = document.createElement("div");
+      stats.className = "stats";
+      var overlap = Math.round(averageOverlap(r.replies) * 100);
+      var line1 = document.createElement("div");
+      line1.innerHTML = "Word overlap between runs: <strong>" + overlap + "%</strong>";
+      stats.appendChild(line1);
+      var perRun = r.replies.map(headingNames);
+      if (perRun.every(function (n) { return n.length > 0; })) {
+        var all = new Set([].concat.apply([], perRun));
+        var line2 = document.createElement("div");
+        line2.innerHTML = "Different watch names across " + r.replies.length + " runs: <strong>" + all.size + "</strong>";
+        stats.appendChild(line2);
+      }
+      col.appendChild(stats);
+
+      var tabs = document.createElement("div");
+      tabs.className = "runs";
+      var body = document.createElement("div");
+      body.className = "msg";
+      r.replies.forEach(function (reply, i) {
+        var t = document.createElement("button");
+        t.type = "button";
+        t.className = "run-tab";
+        t.textContent = "Run " + (i + 1);
+        t.addEventListener("click", function () {
+          tabs.querySelectorAll(".run-tab").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+          t.setAttribute("aria-pressed", "true");
+          body.innerHTML = renderMarkdown(reply);
+        });
+        tabs.appendChild(t);
+      });
+      col.appendChild(tabs);
+      col.appendChild(body);
+      dlgBody.appendChild(col);
+      tabs.firstChild.click();
+    });
+  }
+
+  async function runCompare() {
+    var q = cmpQ.value.trim();
+    var a = parseFloat(cmpA.value), b = parseFloat(cmpB.value);
+    if (!q) { cmpHint.textContent = "Type a question to compare."; cmpQ.focus(); return; }
+    if (a === b) { cmpHint.textContent = "Choose two different temperatures."; return; }
+    if (state.busy) return;
+    cmpHint.textContent = "";
+
+    var messages = state.messages.slice(-(MAX_HISTORY - 1)).concat([{ role: "user", content: q }]);
+    dlgQ.textContent = "“" + q + "”";
+    dlgBody.innerHTML = "";
+    [a, b].forEach(function (t) {
+      var col = document.createElement("div");
+      col.className = "cmp-col";
+      var h = document.createElement("h3");
+      h.textContent = "Temperature " + t.toFixed(1);
+      col.appendChild(h);
+      col.appendChild(typingEl("Running three answers…"));
+      dlgBody.appendChild(col);
+    });
+    if (!dlg.open) dlg.showModal();
+
+    setBusy(true);
+    try {
+      var data = await askServer({ mode: "compare", messages: messages, temperatures: [a, b], profile: state.profile });
+      if (!data.results || data.results.length !== 2) throw new Error("The server sent an unexpected answer. Try again.");
+      renderComparison(data);
+      modelName.textContent = data.model;
+    } catch (err) {
+      dlgBody.innerHTML = "";
+      var e = document.createElement("div");
+      e.className = "cmp-col msg error";
+      e.textContent = err.message;
+      dlgBody.appendChild(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /* ---------- Style quiz ---------- */
+  function openQuiz() {
+    quiz.step = 0;
+    quiz.answers = {};
+    renderQuiz();
+    if (!quizDlg.open) quizDlg.showModal();
+  }
+  function renderQuiz() {
+    quizBody.innerHTML = "";
+    if (quiz.step >= QUIZ.length) { renderQuizResult(); return; }
+    var item = QUIZ[quiz.step];
+
+    var prog = document.createElement("div");
+    prog.className = "quiz-progress";
+    var bar = document.createElement("span");
+    bar.style.width = (quiz.step / QUIZ.length * 100) + "%";
+    prog.appendChild(bar);
+    quizBody.appendChild(prog);
+    requestAnimationFrame(function () { bar.style.width = ((quiz.step + 1) / QUIZ.length * 100) + "%"; });
+
+    var step = document.createElement("p");
+    step.className = "quiz-step";
+    step.textContent = "Question " + (quiz.step + 1) + " of " + QUIZ.length;
+    quizBody.appendChild(step);
+
+    var q = document.createElement("h3");
+    q.className = "quiz-q";
+    q.textContent = item.q;
+    quizBody.appendChild(q);
+
+    var opts = document.createElement("div");
+    opts.className = "quiz-opts";
+    item.opts.forEach(function (o, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "quiz-opt";
+      b.textContent = o[0];
+      if (o[2]) {
+        var s = document.createElement("small");
+        s.textContent = o[2];
+        b.appendChild(s);
+      }
+      var chosen = quiz.answers[item.key];
+      b.setAttribute("aria-pressed", chosen && chosen.index === i ? "true" : "false");
+      b.addEventListener("click", function () {
+        quiz.answers[item.key] = { index: i, value: o[1], label: o[0] };
+        quiz.step++;
+        renderQuiz();
+      });
+      opts.appendChild(b);
+    });
+    quizBody.appendChild(opts);
+
+    var nav = document.createElement("div");
+    nav.className = "quiz-nav";
+    if (quiz.step > 0) {
+      var back = document.createElement("button");
+      back.type = "button";
+      back.className = "quiz-back";
+      back.textContent = "Back";
+      back.addEventListener("click", function () { quiz.step--; renderQuiz(); });
+      nav.appendChild(back);
+    }
+    quizBody.appendChild(nav);
+    var first = opts.querySelector("button");
+    if (first) first.focus();
+  }
+  function renderQuizResult() {
+    var styleIdx = quiz.answers.style ? quiz.answers.style.index : 0;
+    var p = PERSONALITIES[styleIdx];
+
+    var step = document.createElement("p");
+    step.className = "quiz-step";
+    step.textContent = "Your result";
+    quizBody.appendChild(step);
+    var title = document.createElement("p");
+    title.className = "quiz-result-title";
+    title.textContent = p[0];
+    quizBody.appendChild(title);
+    var desc = document.createElement("p");
+    desc.style.margin = "0";
+    desc.textContent = p[1];
+    quizBody.appendChild(desc);
+
+    var dl = document.createElement("dl");
+    dl.className = "quiz-summary";
+    QUIZ.forEach(function (item) {
+      var a = quiz.answers[item.key];
+      if (!a) return;
+      var dt = document.createElement("dt");
+      dt.textContent = PREF_LABELS[item.key];
+      var dd = document.createElement("dd");
+      dd.textContent = a.value || a.label;
+      dl.appendChild(dt);
+      dl.appendChild(dd);
+    });
+    quizBody.appendChild(dl);
+
+    var actions = document.createElement("div");
+    actions.className = "quiz-actions";
+    var go = document.createElement("button");
+    go.type = "button";
+    go.className = "btn-primary";
+    go.textContent = "Get my recommendations";
+    go.disabled = state.busy;
+    go.addEventListener("click", finishQuiz);
+    var redo = document.createElement("button");
+    redo.type = "button";
+    redo.className = "btn-ghost";
+    redo.textContent = "Start again";
+    redo.addEventListener("click", openQuiz);
+    actions.appendChild(go);
+    actions.appendChild(redo);
+    quizBody.appendChild(actions);
+    go.focus();
+  }
+  function finishQuiz() {
+    if (state.busy) return;
+    var changed = {};
+    var parts = [];
+    QUIZ.forEach(function (item) {
+      var a = quiz.answers[item.key];
+      if (!a) return;
+      if (a.value) {
+        state.profile[item.key] = a.value;
+        changed[item.key] = true;
+      }
+      parts.push(PREF_LABELS[item.key].replace("’", "'") + ": " + (a.value || "don't know"));
+    });
+    renderPrefs(changed);
+    quizDlg.close();
+    var personality = PERSONALITIES[quiz.answers.style ? quiz.answers.style.index : 0][0];
+    setWatchTheme((quiz.answers.style ? quiz.answers.style.index : 0) + 1, "Styled for " + personality, true);
+    var unsure = quiz.answers.movement && quiz.answers.movement.value === "Undecided";
+    var styleIdx = quiz.answers.style ? quiz.answers.style.index : 0;
+    send("I took the style quiz and got \"" + PERSONALITIES[styleIdx][0] + "\". My answers: " + parts.join("; ") + "." +
+      (unsure ? " I'm not sure which movement type to choose, so please explain briefly." : "") +
+      " Please recommend watches for me.");
+  }
+
+  /* ---------- Live watch illustration ---------- */
+  // An original, code-drawn watch whose hands show the visitor's local time.
+  var WATCH_THEMES = [
+    { name: "Signature dial", metal: "steel", bezel: "polished", dial: ["#33705A", "#1F4A3A", "#12301F"],
+      sunburst: true, indices: "baton", hands: "dauphine", handMetal: "steel", seconds: "#D2B472",
+      date: true, text: "#E8EFEA", ink: "#E8EFEA", strap: { type: "leather", color: "#5A3D2A", stitch: "#D9C6A5" } },
+    { name: "Minimalist dial", metal: "steel", bezel: "polished", dial: ["#FFFFFF", "#F7F6F2", "#E6E4DD"],
+      sunburst: false, indices: "printed", hands: "baton", handColor: "#1E2023", seconds: "#C0392B",
+      date: false, text: "#1E2023", ink: "#1E2023", strap: { type: "leather", color: "#222326", stitch: "#6A6C70" } },
+    { name: "Classicist dial", metal: "gold", bezel: "coin", dial: ["#FCF6E8", "#F2E7CD", "#DFCDA6"],
+      sunburst: false, indices: "roman", hands: "leaf", handColor: "#24438A", seconds: "#24438A",
+      date: false, text: "#5A4628", ink: "#3A2E1E", strap: { type: "leather", color: "#6B3B22", stitch: "#E2CDA6" } },
+    { name: "Adventurer dial", metal: "steel", bezel: "dive", dial: ["#2A2D30", "#1A1C1E", "#0F1011"],
+      sunburst: false, indices: "lume", hands: "sword", handMetal: "steel", seconds: "#E2782E", lume: "#E3F1D9",
+      date: false, text: "#E3F1D9", ink: "#E3F1D9", strap: { type: "rubber", color: "#434B37" } },
+    { name: "Statement dial", metal: "steel", bezel: "polished", dial: ["#4A75DA", "#2348A3", "#14296A"],
+      sunburst: true, indices: "baton", hands: "dauphine", handMetal: "steel", seconds: "#F2B134",
+      date: true, text: "#EEF2FB", ink: "#EEF2FB", strap: { type: "leather", color: "#1E2A4C", stitch: "#97A3C4" } }
+  ];
+  var METALS = {
+    steel: ["#FBFCFA", "#BFC2BE", "#EFF1EE", "#8A8D89", "#5B5E5A"],
+    gold: ["#FFF3CC", "#D3A85A", "#F7DE9E", "#A27834", "#6B4C1C"]
+  };
+  var watchSvg = $("watch"), watchCap = $("watchCap");
+  var wHour = null, wMin = null, wSec = null;
+  var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var watchTheme = 0;
+
+  function n2(v) { return (Math.round(v * 100) / 100).toString(); }
+  function pt(r, deg) {
+    var a = deg * Math.PI / 180;
+    return [100 + r * Math.sin(a), 140 - r * Math.cos(a)];
+  }
+  function shade(hex, f) {
+    var n = parseInt(hex.slice(1), 16), rgb = [n >> 16, (n >> 8) & 255, n & 255];
+    return "#" + rgb.map(function (v) {
+      var c = f < 1 ? v * f : v + (255 - v) * (f - 1);
+      c = Math.max(0, Math.min(255, Math.round(c)));
+      return ("0" + c.toString(16)).slice(-2);
+    }).join("");
+  }
+  function lin(id, x1, y1, x2, y2, stops) {
+    return '<linearGradient id="' + id + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '">' +
+      stops.map(function (st) { return '<stop offset="' + st[0] + '" stop-color="' + st[1] + '"/>'; }).join("") +
+      "</linearGradient>";
+  }
+  function line(a, b, attrs) {
+    return '<line x1="' + n2(a[0]) + '" y1="' + n2(a[1]) + '" x2="' + n2(b[0]) + '" y2="' + n2(b[1]) + '" ' + attrs + "/>";
+  }
+  function poly(points, attrs) {
+    return '<polygon points="' + points.map(function (p) { return n2(p[0]) + "," + n2(p[1]); }).join(" ") + '" ' + attrs + "/>";
+  }
+
+  function handPair(t) {
+    if (t.handMetal) {
+      var m = METALS[t.handMetal];
+      return [m[0], shade(m[3], 1.1)];
+    }
+    return [shade(t.handColor, 1.35), t.handColor];
+  }
+
+  function handMarkup(t, which, R) {
+    var pair = handPair(t), h = which === "h";
+    var len = h ? R * 0.56 : R * 0.88, w, out = "";
+    var tip = [100, 140 - len];
+    if (t.hands === "dauphine") {
+      w = h ? 4.6 : 3.5;
+      out += poly([tip, [100 - w, 140], [100, 140 + w * 1.4]], 'fill="' + pair[0] + '"');
+      out += poly([tip, [100 + w, 140], [100, 140 + w * 1.4]], 'fill="' + pair[1] + '"');
+    } else if (t.hands === "baton") {
+      w = h ? 3.6 : 2.4;
+      out += '<rect x="' + n2(100 - w / 2) + '" y="' + n2(140 - len) + '" width="' + w + '" height="' + n2(len + 7) + '" rx="' + n2(w / 2) + '" fill="' + pair[1] + '"/>';
+    } else if (t.hands === "leaf") {
+      w = h ? 4.4 : 3.3;
+      out += '<path d="M100,' + n2(140 - len) + " Q" + n2(100 - w * 2) + "," + n2(140 - len * 0.42) + " 100," + n2(140 + 6) + ' Z" fill="' + pair[0] + '"/>';
+      out += '<path d="M100,' + n2(140 - len) + " Q" + n2(100 + w * 2) + "," + n2(140 - len * 0.42) + " 100," + n2(140 + 6) + ' Z" fill="' + pair[1] + '"/>';
+    } else { // sword, for the dive watch
+      w = h ? 5.8 : 4.3;
+      var sh = 140 - len + w * 2.4;
+      out += poly([tip, [100 - w, sh], [100 - w * 0.55, 145], [100, 145]], 'fill="' + pair[0] + '"');
+      out += poly([tip, [100 + w, sh], [100 + w * 0.55, 145], [100, 145]], 'fill="' + pair[1] + '"');
+      out += poly([[100, 140 - len + 3.6], [100 + w - 1.6, sh + 1], [100 + w * 0.55 - 1.2, 133],
+                   [100 - w * 0.55 + 1.2, 133], [100 - w + 1.6, sh + 1]], 'fill="' + t.lume + '"');
+    }
+    return out;
+  }
+
+  function secondsMarkup(t, R) {
+    var out = line([100, 140 + R * 0.26], [100, 140 - (R - 3)],
+      'stroke="' + t.seconds + '" stroke-width="1" stroke-linecap="round"');
+    out += '<circle cx="100" cy="' + n2(140 + R * 0.2) + '" r="2.4" fill="' + t.seconds + '"/>';
+    if (t.bezel === "dive") {
+      out += '<circle cx="100" cy="' + n2(140 - R * 0.64) + '" r="2.9" fill="' + t.lume + '" stroke="' + t.seconds + '" stroke-width="1"/>';
+    }
+    return out;
+  }
+
+  function strapMarkup(t, top) {
+    var st = t.strap, out = "";
+    var d = top ? "M67,0 L133,0 L135,90 L65,90 Z" : "M65,190 L135,190 L133,280 L67,280 Z";
+    out += '<path d="' + d + '" fill="url(#sGrad)"/>';
+    if (st.type === "leather") {
+      var dash = 'stroke="' + st.stitch + '" stroke-width="0.9" stroke-dasharray="3 2.2" stroke-linecap="round" opacity="0.85"';
+      if (top) {
+        out += line([71, 3], [69.4, 84], dash) + line([129, 3], [130.6, 84], dash);
+      } else {
+        out += line([69.4, 196], [71, 277], dash) + line([130.6, 196], [129, 277], dash);
+        [232, 248, 264].forEach(function (y) {
+          out += '<ellipse cx="100" cy="' + y + '" rx="2.3" ry="1.6" fill="' + shade(st.color, 0.35) + '"/>';
+        });
+      }
+    } else {
+      for (var y = top ? 6 : 198; y < (top ? 86 : 276); y += 7) {
+        out += line([68, y], [132, y], 'stroke="#000" stroke-opacity="0.3" stroke-width="1.4"');
+        out += line([68, y + 1.4], [132, y + 1.4], 'stroke="#fff" stroke-opacity="0.07" stroke-width="0.8"');
+      }
+    }
+    return out;
+  }
+
+  function watchMarkup(t) {
+    var M = METALS[t.metal], dive = t.bezel === "dive", R = dive ? 56.5 : 63, s = [], i, deg;
+    var sc = t.strap.color;
+
+    s.push("<defs>");
+    s.push(lin("mCase", 0, 0, 1, 1, [[0, M[0]], [0.3, M[1]], [0.5, M[2]], [0.78, M[3]], [1, M[4]]]));
+    s.push(lin("mRing", 1, 0, 0, 1, [[0, M[0]], [0.35, M[3]], [0.62, M[2]], [1, M[1]]]));
+    s.push(lin("mApplied", 0, 0, 1, 0, [[0, M[0]], [0.49, M[2]], [0.51, M[3]], [1, M[1]]]));
+    s.push('<radialGradient id="dGrad" cx="0.5" cy="0.4" r="0.62"><stop offset="0" stop-color="' + t.dial[0] +
+      '"/><stop offset="0.6" stop-color="' + t.dial[1] + '"/><stop offset="1" stop-color="' + t.dial[2] + '"/></radialGradient>');
+    s.push(lin("sGrad", 0, 0, 1, 0, [[0, shade(sc, 0.55)], [0.13, sc], [0.5, shade(sc, 1.1)], [0.87, sc], [1, shade(sc, 0.55)]]));
+    s.push('<radialGradient id="glare" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff" stop-opacity="0.34"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>');
+    s.push('<clipPath id="dClip"><circle cx="100" cy="140" r="' + R + '"/></clipPath>');
+    s.push('<clipPath id="cClip"><circle cx="100" cy="140" r="70"/></clipPath>');
+    s.push('<filter id="hShadow" x="-60%" y="-60%" width="220%" height="220%"><feDropShadow dx="1.2" dy="2.2" stdDeviation="1.1" flood-color="#000" flood-opacity="0.38"/></filter>');
+    s.push("</defs>");
+
+    // strap, lugs, crown, case
+    s.push(strapMarkup(t, true), strapMarkup(t, false));
+    [[55, 58], [133, 58], [55, 186], [133, 186]].forEach(function (p) {
+      s.push('<rect x="' + p[0] + '" y="' + p[1] + '" width="12" height="36" rx="5" fill="url(#mCase)" stroke="' + M[4] + '" stroke-opacity="0.5" stroke-width="0.6"/>');
+    });
+    if (dive) {
+      s.push('<rect x="165" y="121" width="11" height="8" rx="3" fill="url(#mCase)"/>');
+      s.push('<rect x="165" y="151" width="11" height="8" rx="3" fill="url(#mCase)"/>');
+    }
+    s.push('<rect x="170" y="131" width="11" height="18" rx="2.5" fill="url(#mCase)" stroke="' + M[4] + '" stroke-opacity="0.5" stroke-width="0.5"/>');
+    for (i = 0; i < 5; i++) s.push(line([174.5 + i * 1.4, 132.5], [174.5 + i * 1.4, 147.5], 'stroke="' + M[4] + '" stroke-opacity="0.55" stroke-width="0.5"'));
+    s.push('<circle cx="100" cy="140" r="74" fill="url(#mCase)" stroke="' + M[4] + '" stroke-opacity="0.6" stroke-width="0.8"/>');
+    if (t.bezel !== "polished") {
+      for (i = 0; i < 120; i++) s.push(line(pt(71.4, i * 3), pt(73.6, i * 3), 'stroke="' + M[4] + '" stroke-opacity="0.45" stroke-width="0.6"'));
+    }
+
+    // bezel
+    s.push('<circle cx="100" cy="140" r="70" fill="url(#mRing)"/>');
+    if (dive) {
+      s.push('<circle cx="100" cy="140" r="68.4" fill="#141516"/>');
+      for (i = 0; i < 60; i++) {
+        deg = i * 6;
+        if (i === 0) continue;
+        if (i % 10 === 0) {
+          s.push('<text x="100" y="' + n2(140 - 63 + 2.3) + '" transform="rotate(' + deg + ' 100 140)" text-anchor="middle" font-size="6.6" font-family="Jost, Futura, sans-serif" font-weight="500" fill="#ECECEA">' + i + "</text>");
+        } else if (i < 15 || i % 5 === 0) {
+          s.push(line(pt(67.6, deg), pt(i % 5 === 0 ? 63.2 : 65.2, deg), 'stroke="#ECECEA" stroke-width="' + (i % 5 === 0 ? 1.4 : 0.6) + '"'));
+        }
+      }
+      s.push(poly([[100, 140 - 67.8], [96, 140 - 61.4], [104, 140 - 61.4]], 'fill="#ECECEA"'));
+      s.push('<circle cx="100" cy="' + n2(140 - 64.2) + '" r="1.3" fill="' + t.lume + '"/>');
+      s.push('<circle cx="100" cy="140" r="58.2" fill="#0B0B0C"/>');
+    } else {
+      s.push('<circle cx="100" cy="140" r="64.6" fill="' + shade(t.dial[2], 0.6) + '"/>');
+    }
+
+    // dial
+    s.push('<circle cx="100" cy="140" r="' + R + '" fill="url(#dGrad)"/>');
+    if (t.sunburst) {
+      var rays = '<g clip-path="url(#dClip)">';
+      for (i = 0; i < 180; i++) {
+        rays += line([100, 140], pt(R, i * 2), 'stroke="' + (i % 2 ? "#fff" : "#000") + '" stroke-opacity="0.06" stroke-width="1"');
+      }
+      s.push(rays + "</g>");
+    }
+    s.push('<circle cx="100" cy="140" r="' + n2(R - 0.7) + '" fill="none" stroke="#000" stroke-opacity="0.22" stroke-width="1.6"/>');
+
+    // minute track
+    if (t.indices === "roman") {
+      s.push('<circle cx="100" cy="140" r="' + n2(R - 3) + '" fill="none" stroke="' + t.ink + '" stroke-width="0.4"/>');
+      s.push('<circle cx="100" cy="140" r="' + n2(R - 6.2) + '" fill="none" stroke="' + t.ink + '" stroke-width="0.4"/>');
+      for (i = 0; i < 60; i++) s.push(line(pt(R - 3, i * 6), pt(R - 6.2, i * 6), 'stroke="' + t.ink + '" stroke-width="' + (i % 5 === 0 ? 0.9 : 0.4) + '"'));
+    } else {
+      for (i = 0; i < 60; i++) {
+        if (i % 5 === 0) continue;
+        s.push(line(pt(R - 2.2, i * 6), pt(R - 4.6, i * 6), 'stroke="' + t.ink + '" stroke-opacity="0.6" stroke-width="0.45"'));
+      }
+    }
+
+    // hour markers
+    var ROMAN = ["XII", "I", "II", "III", "IIII", "V", "VI", "VII", "VIII", "IX", "X", "XI"];
+    for (i = 0; i < 12; i++) {
+      deg = i * 30;
+      var rot = ' transform="rotate(' + deg + ' 100 140)"';
+      if (t.indices === "baton") {
+        var len = i % 3 === 0 ? 13 : 10, y = n2(140 - (R - 6));
+        var bar = function (x, w) {
+          return '<rect x="' + n2(x) + '" y="' + y + '" width="' + w + '" height="' + len + '" rx="0.8" fill="url(#mApplied)" stroke="#000" stroke-opacity="0.35" stroke-width="0.35"' + rot + "/>";
+        };
+        s.push(i === 0 ? bar(100 - 4.4, 2.9) + bar(100 + 1.5, 2.9) : bar(100 - 1.6, 3.2));
+      } else if (t.indices === "printed") {
+        var pl = i % 3 === 0 ? 9.5 : 6.5;
+        s.push('<rect x="99.3" y="' + n2(140 - (R - 6)) + '" width="1.4" height="' + pl + '" fill="' + t.ink + '"' + rot + "/>");
+      } else if (t.indices === "roman") {
+        var p = pt(R - 13.5, deg);
+        s.push('<text x="' + n2(p[0]) + '" y="' + n2(p[1] + 3) + '" text-anchor="middle" font-size="' + (i === 0 ? 8 : 8.4) + '" font-family="Bodoni Moda, Didot, Georgia, serif" font-weight="500" fill="' + t.ink + '">' + ROMAN[i] + "</text>");
+      } else { // luminous dive markers
+        var lumeAttrs = 'fill="' + t.lume + '" stroke="' + M[3] + '" stroke-width="0.8"';
+        if (i === 0) {
+          s.push(poly([[94.6, 140 - (R - 3.6)], [105.4, 140 - (R - 3.6)], [100, 140 - (R - 14)]], lumeAttrs));
+        } else if (i % 3 === 0) {
+          s.push('<rect x="97.8" y="' + n2(140 - (R - 3.8)) + '" width="4.4" height="10.5" rx="0.6" ' + lumeAttrs + rot + "/>");
+        } else {
+          var c = pt(R - 8.2, deg);
+          s.push('<circle cx="' + n2(c[0]) + '" cy="' + n2(c[1]) + '" r="3.5" ' + lumeAttrs + "/>");
+        }
+      }
+    }
+
+    // printing on the dial
+    s.push('<text x="100" y="' + n2(140 - R * 0.42) + '" text-anchor="middle" font-size="' + (dive ? 7.4 : 8.2) + '" font-family="Bodoni Moda, Didot, Georgia, serif" font-weight="600" letter-spacing="0.3" fill="' + t.text + '">WristMatch</text>');
+    s.push('<text x="100" y="' + n2(140 + R * 0.5) + '" text-anchor="middle" font-size="5" font-family="Jost, Futura, sans-serif" letter-spacing="0.5" fill="' + t.text + '" fill-opacity="0.75">Automatic</text>');
+
+    // date window at 3 o'clock
+    if (t.date) {
+      var dx = 100 + R - 31;
+      s.push('<rect x="' + n2(dx) + '" y="134.4" width="11.5" height="11.2" rx="0.8" fill="#FAFAF7" stroke="url(#mApplied)" stroke-width="1.2"/>');
+      s.push('<text x="' + n2(dx + 5.75) + '" y="142.7" text-anchor="middle" font-size="7.4" font-family="Jost, Futura, sans-serif" font-weight="500" fill="#151515">' + new Date().getDate() + "</text>");
+    }
+
+    // hands, each casting a small shadow
+    s.push('<g filter="url(#hShadow)"><g id="wHour">' + handMarkup(t, "h", R) + "</g></g>");
+    s.push('<g filter="url(#hShadow)"><g id="wMin">' + handMarkup(t, "m", R) + "</g></g>");
+    s.push('<g filter="url(#hShadow)"><g id="wSec">' + secondsMarkup(t, R) + "</g></g>");
+    s.push('<circle cx="100" cy="140" r="4.4" fill="url(#mApplied)" stroke="#000" stroke-opacity="0.3" stroke-width="0.4"/>');
+    s.push('<circle cx="100" cy="140" r="1.6" fill="' + t.seconds + '"/>');
+
+    // reflection on the glass
+    s.push('<g clip-path="url(#cClip)"><ellipse cx="72" cy="104" rx="56" ry="30" transform="rotate(-32 72 104)" fill="url(#glare)"/></g>');
+    var a1 = pt(66, -80), a2 = pt(66, -24);
+    s.push('<path d="M' + n2(a1[0]) + "," + n2(a1[1]) + " A66,66 0 0 1 " + n2(a2[0]) + "," + n2(a2[1]) + '" fill="none" stroke="#fff" stroke-opacity="0.38" stroke-width="1.3" stroke-linecap="round"/>');
+    return s.join("");
+  }
+
+  function setWatchTheme(i, title, animate) {
+    watchTheme = i;
+    var t = WATCH_THEMES[i];
+    function draw() {
+      watchSvg.innerHTML = '<title id="watchLabel">An illustrated watch showing your local time</title>' + watchMarkup(t);
+      wHour = $("wHour"); wMin = $("wMin"); wSec = $("wSec");
+      tickWatch();
+      watchSvg.style.opacity = "1";
+    }
+    if (animate && !reducedMotion) {
+      watchSvg.style.opacity = "0";
+      setTimeout(draw, 180);
+    } else {
+      draw();
+    }
+    watchCap.innerHTML = "";
+    var strong = document.createElement("strong");
+    strong.textContent = title || t.name;
+    watchCap.appendChild(strong);
+    watchCap.appendChild(document.createTextNode("Showing your local time. Tap the watch for another dial."));
+  }
+  function buildWatch() { /* drawing happens in setWatchTheme */ }
+  function tickWatch() {
+    if (!wHour) return;
+    var now = new Date();
+    var s = now.getSeconds() + (reducedMotion ? 0 : now.getMilliseconds() / 1000);
+    var m = now.getMinutes() + s / 60;
+    var h = (now.getHours() % 12) + m / 60;
+    wSec.setAttribute("transform", "rotate(" + (s * 6) + " 100 140)");
+    wMin.setAttribute("transform", "rotate(" + (m * 6) + " 100 140)");
+    wHour.setAttribute("transform", "rotate(" + (h * 30) + " 100 140)");
+  }
+  function startWatch() {
+    tickWatch();
+    if (reducedMotion) { setInterval(tickWatch, 1000); return; }
+    (function loop() { tickWatch(); requestAnimationFrame(loop); })();
+  }
+  $("watchBtn").addEventListener("click", function () {
+    setWatchTheme((watchTheme + 1) % WATCH_THEMES.length, null, true);
+  });
+
+  /* ---------- Temperature dial ---------- */
+  function buildDial() {
+    var ns = "http://www.w3.org/2000/svg";
+    var g = $("ticks");
+    for (var i = 0; i <= 15; i++) {
+      var t = i / 10;
+      var rad = (-90 + (t / TEMP_MAX) * 180) * Math.PI / 180;
+      var major = i % 5 === 0;
+      var r1 = 80, r2 = major ? 68 : 73;
+      var line = document.createElementNS(ns, "line");
+      line.setAttribute("x1", (100 + r1 * Math.sin(rad)).toFixed(2));
+      line.setAttribute("y1", (100 - r1 * Math.cos(rad)).toFixed(2));
+      line.setAttribute("x2", (100 + r2 * Math.sin(rad)).toFixed(2));
+      line.setAttribute("y2", (100 - r2 * Math.cos(rad)).toFixed(2));
+      line.setAttribute("class", major ? "dial-tick major" : "dial-tick");
+      g.appendChild(line);
+      if (major) {
+        // numbers sit outside the arc, so the needle never covers them
+        var txt = document.createElementNS(ns, "text");
+        txt.setAttribute("x", (100 + 93 * Math.sin(rad)).toFixed(2));
+        txt.setAttribute("y", (100 - 93 * Math.cos(rad) + 4).toFixed(2));
+        txt.setAttribute("text-anchor", "middle");
+        txt.setAttribute("class", "dial-num");
+        txt.textContent = t === 0 ? "0" : t.toFixed(1);
+        g.appendChild(txt);
+      }
+    }
+  }
+  function setTemp(v) {
+    state.temperature = Math.round(v * 10) / 10;
+    tempValue.textContent = state.temperature.toFixed(1);
+    needle.style.transform = "rotate(" + (-90 + (state.temperature / TEMP_MAX) * 180) + "deg)";
+  }
+
+  /* ---------- Wiring ---------- */
+  function autosize() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 160) + "px";
+  }
+  input.addEventListener("input", autosize);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      send(input.value);
+    }
+  });
+  composer.addEventListener("submit", function (e) { e.preventDefault(); send(input.value); });
+  tempRange.addEventListener("input", function () { setTemp(parseFloat(tempRange.value)); });
+
+  for (var i = 0; i <= 15; i++) {
+    var v = (i / 10).toFixed(1);
+    cmpA.add(new Option(v, v, false, v === "0.0"));
+    cmpB.add(new Option(v, v, false, v === "1.5"));
+  }
+  COMPARE_IDEAS.forEach(function (idea) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.textContent = idea;
+    b.addEventListener("click", function () { cmpQ.value = idea; cmpHint.textContent = ""; });
+    cmpIdeas.appendChild(b);
+  });
+  cmpBtn.addEventListener("click", runCompare);
+  dlgClose.addEventListener("click", function () { dlg.close(); });
+  dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
+  $("quizClose").addEventListener("click", function () { quizDlg.close(); });
+  quizDlg.addEventListener("click", function (e) { if (e.target === quizDlg) quizDlg.close(); });
+  $("quizOpen2").addEventListener("click", openQuiz);
+
+  newChat.addEventListener("click", function () {
+    state.conv++;
+    state.messages = [];
+    state.profile = emptyProfile();
+    renderPrefs();
+    renderWelcome();
+    setBusy(false);
+    input.focus();
+  });
+
+  buildDial();
+  buildWatch();
+  setWatchTheme(0);
+  startWatch();
+  renderPrefs();
+  renderShortlist();
+  renderWelcome();
+  needle.style.transform = "rotate(-90deg)";
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () { setTemp(parseFloat(tempRange.value)); });
+  });
+})();
+</script>
+</body>
+</html>
